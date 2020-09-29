@@ -1,0 +1,27 @@
+Package: dblinkr
+Type: Package
+Title: Convenience fcns to connect to and query from our databases
+Version: 0.1.1
+Author: KM
+Maintainer: KM <kira.mcd.99@gmail.com>
+Description: Convenience functions for connecting to postgis/postgres database and doing spatial queries. Includes a tutorial vignette on working with dbs from R.
+Imports: 
+  DBI,
+  dbplyr,
+  dplyr,
+  ggplot2,
+  knitr,
+  pool,
+  rpostgis,
+  RPostgres,
+  RPostgreSQL,
+  sf
+License: use_mit_license("Kira McDonald")
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
+Depends: 
+    R (>= 2.10)
+VignetteBuilder: knitr
+Suggests: 
+    rmarkdown

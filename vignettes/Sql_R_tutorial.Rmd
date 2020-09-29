@@ -1,0 +1,156 @@
+---
+title: "Spatial Ineq DBs from R tutorial"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{dblinkr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+usr="km31"
+pw="Sh@rkey20"
+```
+
+This introduces the database set up to store and access some of our larger datasets.
+
+
+### General Background
+
+We have a database on a princeton server to store, share, and access data. This setup has some advantages over just sharing data through email or keeping on our local machines:
+
+1. Consistency - we can all access and work with the same data without manually managing versions scattered throughout various google drives and local machines.
+1. Reproducability -  This could also allow us to run each other's scripts and easily check or replicate each other's work.
+1. Subsetting - We can selectively access portions of a dataset that might be too large to load onto our local machine. This can be done programmatically from R.
+1. Scalability - We can store more large datasets that would fill up our hard drives if we just tried to work locally.
+
+Separate from the Princeton setup, I also have a working database hosted on an Amazon server. This will be an option if we want to depart from Princeton's institutional resources. This setup would have the additional advantages of allowing us to link the databases to more interactive visualizations and potentially allowing us to share versions of our datasets more widely.
+
+### Setup with Princeton credentials
+
+To connect to the Princeton database, you will first have to connect with the princeton research computing folks. You will need a username and password and you'll need to keep open a VPN to the Princeton server. Email them to get that set up:
+
+https://researchcomputing.princeton.edu/about/contact/ask-research-computing
+
+### Connecting through R
+
+After that, you're ready to pull & write data to the database.
+I wrote short R library called 'dblinkr' that contains some helper functions for this purpose. This tutorial will use some of these convenience functions.
+
+First, we can use a helper function from this library to connect to the princeton server. Save your connection in your R environment.
+
+```{r connecting}
+library(dblinkr)
+# set usr and pw to your username and password!
+con <- princeton.db.connect(usr, pw)
+```
+
+### Checking the DB contents
+
+We're in! The first thing we might want to do is check what's there.
+
+We can keep our tables organized into different "schema," which are basically organizational subdivisions for our database.
+
+```{r checkcontents}
+# check what's there:
+DBI::dbListObjects(con)
+# The things I've loaded in so far are all in schema.
+```
+
+Some of the above are artifacts from setting up postgis; the others are schema containing tables that I've already loaded in.
+
+My tables so far are divided between "divs," which holds spatial divisions (like highways, rivers, historical redlining, etc.); "regions," which holds study areas (commuting zones, counties, census tracts, etc.); and "attr," which stores non-spatial, attribute information.
+
+We can see what's in each schema with a convenience fcn from my dblinkr package:
+```{r tbl.in.schema}
+dblinkr::tbls.in.schema(con, "divs")
+# this fcn just wraps DBI::dbListObjects w/ some parameters specified
+```
+
+Here we can see the tables in the "divs" schema.
+It'll likely make sense to add more schema as we work to keep all the components of the project organized.
+
+
+### Working with hosted data
+
+You can start working with what's there by using R, SQL, or a combination. I know very minimal SQL and it's not necessary to to use these things. But learning enough to write a line here or there can be convenient in some cases.
+
+First let's just pull in a whole table. This will use 'dbplyr,' a library that translates tidyverse R code into SQL. Our code will change slightly depending on whether or not we're reading in spatial information .
+
+The 'dbplyr' vignette can be found here: https://dbplyr.tidyverse.org/articles/dbplyr.html
+
+```{r dbplyr}
+# First, let's read using dbplyr:
+suppressMessages(library(dplyr))
+suppressMessages(library(dbplyr))
+cts <- tbl(con, in_schema("attr", "cts"))
+colnames(cts)[1:10]
+# Now we can see the data, but it's still a ~reference~ to the database table,
+# not a df or tibble in our R environment:
+class(cts)
+
+# It's generally a good idea to pull things into local memory as soon as they're
+# down to a manageable size. Database references will be harder to
+# work with. This is done as:
+local.cts <- collect(cts)
+class(local.cts)
+
+# You can also use dplyr to generate sql queries:
+czpop <- cts %>% group_by(cz, czname) %>% summarise("commuting zone population" = sum(population, na.rm = T))
+czpop %>% head()
+# equivalent sql to above R code:
+czpop %>% dplyr::show_query()
+
+
+```
+
+One likely use case might be pulling from an extremely large table that won't fit into local memory all at once. We can pull in subsamples for exploratory analysis or iterate through identifiers to process over the full dataset:
+
+```{r subsampling}
+# Pull in just census-tracts for Philadelphia
+phl.cts <- cts %>% filter(czname == "Philadelphia") %>% collect()
+phl.cts %>% select(geoid, cz, czname, population) %>% head()
+```
+
+This will likely more useful with, for example, the 380GB safegraph data!
+
+### Working with spatial data
+
+I've mostly been using this setup for spatial data so far. The 'dblinkr' library I referenced above has some helper functions for spatially subsetting from a database. dbplyr won't be able to help us do spatial subsets and won't handle geometries well, so we switch to the sf library or dblinkr helper functions for this.
+
+```{r spatialsql, fig.width=7,fig.height=6}
+library(sf)
+tbls.in.schema(con, "regions")
+# use sf library to load a subset
+counties <- st_read(con, query = "select * from regions.counties where statefp='42';")
+
+phl <- counties %>% filter(grepl("Philadelphia", name))
+# use this region to subset from other, more memory-intensive spatial datasets.
+# Below helper function gets all rows of a spatial table within the area bounded
+# by the supplied region.
+phwys <- dblinkr::query.division(con, region = phl, "divs.hwys")
+prl <- dblinkr::query.division(con, region = phl, "divs.redlining")
+# make a cool map?
+library(ggplot2)
+ggplot() +
+  geom_sf(data = prl, aes(fill= holc_grade), color = "white") +
+  geom_sf(data = st_crop(phwys, prl), color = "black", size = 1) +
+  theme_void() +
+  labs(title = "hwys and redlining in philly")
+```
+
+(You can also supply SQL to subset a shapefile even if it's not hosted in memory.)
+
+
+### Working outside of R (quick note)
+
+As a final quick note, you can download [pgadmin](https://www.pgadmin.org/) to have a GUI to check all of this. This can be really useful for checking that things are going as expected and to have more of a visual on the db. It was surprisingly painless for me to get this set up and find the princeton db from it.
+
+## Additional resources
+
+1. [Intro to DBI](https://db.rstudio.com/dbi/) -- underlying package for using databases from R
+1. [dbplyr vignette](https://cran.r-project.org/web/packages/dbplyr/vignettes/dbplyr.html)
+1. [More on Spatial SQL from R](https://jayrobwilliams.com/posts/2020/09/spatial-sql)
+1. [PostGIS](https://postgis.net/) & [PostgresSQL](https://www.postgresql.org/) -- The actual setups for our database
