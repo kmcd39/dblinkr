@@ -7,7 +7,7 @@ To install the package from Github:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("r-lib/covr")
+devtools::install_github("https://github.com/kmcd39/dblinkr.git")
 ```
 
 Make sure you have a VPN open as well as an account with Princeton Research Computing.
