@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Spatial Ineq DBs from R tutorial</title>
+
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Spatial Ineq DBs from R tutorial</h1>
+
+
+
+<p>This introduces the database set up to store and access some of our larger datasets.</p>
+<div id="general-background" class="section level3">
+<h3>General Background</h3>
+<p>We have a database on a princeton server to store, share, and access data. This setup has some advantages over just sharing data through email or keeping on our local machines:</p>
+<ol style="list-style-type: decimal">
+<li>Consistency - we can all access and work with the same data without manually managing versions scattered throughout various google drives and local machines.</li>
+<li>Reproducability - This could also allow us to run each other’s scripts and easily check or replicate each other’s work.</li>
+<li>Subsetting - We can selectively access portions of a dataset that might be too large to load onto our local machine. This can be done programmatically from R.</li>
+<li>Scalability - We can store more large datasets that would fill up our hard drives if we just tried to work locally.</li>
+</ol>
+<p>Separate from the Princeton setup, I also have a working database hosted on an Amazon server. This will be an option if we want to depart from Princeton’s institutional resources. This setup would have the additional advantages of allowing us to link the databases to more interactive visualizations and potentially allowing us to share versions of our datasets more widely.</p>
+</div>
+<div id="setup-with-princeton-credentials" class="section level3">
+<h3>Setup with Princeton credentials</h3>
+<p>To connect to the Princeton database, you will first have to connect with the princeton research computing folks. You will need a username and password and you’ll need to keep open a VPN to the Princeton server. Email them to get that set up:</p>
+<p><a href="https://researchcomputing.princeton.edu/about/contact/ask-research-computing" class="uri">https://researchcomputing.princeton.edu/about/contact/ask-research-computing</a></p>
+</div>
+<div id="connecting-through-r" class="section level3">
+<h3>Connecting through R</h3>
+<p>After that, you’re ready to pull &amp; write data to the database. I wrote short R library called ‘dblinkr’ that contains some helper functions for this purpose. This tutorial will use some of these convenience functions.</p>
+<p>First, we can use a helper function from this library to connect to the princeton server. Save your connection in your R environment.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(dblinkr)</span></code></pre></div>
+<pre><code>## Warning: replacing previous import &#39;dbplyr::ident&#39; by &#39;dplyr::ident&#39; when
+## loading &#39;dblinkr&#39;</code></pre>
+<pre><code>## Warning: replacing previous import &#39;dbplyr::sql&#39; by &#39;dplyr::sql&#39; when loading
+## &#39;dblinkr&#39;</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># set usr and pw to your username and password!</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>con &lt;-<span class="st"> </span><span class="kw">princeton.db.connect</span>(usr, pw)</span></code></pre></div>
+<pre><code>## Loading required package: DBI</code></pre>
+<pre><code>## Loading required package: RPostgreSQL</code></pre>
+<pre><code>## connecting with Postgres driver</code></pre>
+</div>
+<div id="checking-the-db-contents" class="section level3">
+<h3>Checking the DB contents</h3>
+<p>We’re in! The first thing we might want to do is check what’s there.</p>
+<p>We can keep our tables organized into different “schema,” which are basically organizational subdivisions for our database.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="co"># check what&#39;s there:</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a>DBI<span class="op">::</span><span class="kw">dbListObjects</span>(con)</span></code></pre></div>
+<pre><code>##                               table is_prefix
+## 1     &lt;Id&gt; table = corelogic_sample     FALSE
+## 2    &lt;Id&gt; table = geography_columns     FALSE
+## 3     &lt;Id&gt; table = geometry_columns     FALSE
+## 4      &lt;Id&gt; table = spatial_ref_sys     FALSE
+## 5       &lt;Id&gt; table = raster_columns     FALSE
+## 6     &lt;Id&gt; table = raster_overviews     FALSE
+## 7  &lt;Id&gt; schema = information_schema      TRUE
+## 8                &lt;Id&gt; schema = divs      TRUE
+## 9  &lt;Id&gt; schema = regions_simplified      TRUE
+## 10            &lt;Id&gt; schema = regions      TRUE
+## 11             &lt;Id&gt; schema = public      TRUE
+## 12               &lt;Id&gt; schema = attr      TRUE
+## 13         &lt;Id&gt; schema = pg_catalog      TRUE</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="co"># The things I&#39;ve loaded in so far are all in schema.</span></span></code></pre></div>
+<p>Some of the above are artifacts from setting up postgis; the others are schema containing tables that I’ve already loaded in.</p>
+<p>My tables so far are divided between “divs,” which holds spatial divisions (like highways, rivers, historical redlining, etc.); “regions,” which holds study areas (commuting zones, counties, census tracts, etc.); and “attr,” which stores non-spatial, attribute information.</p>
+<p>We can see what’s in each schema with a convenience fcn from my dblinkr package:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>dblinkr<span class="op">::</span><span class="kw">tbls.in.schema</span>(con, <span class="st">&quot;divs&quot;</span>)</span></code></pre></div>
+<pre><code>##                                      table is_prefix
+## 1    &lt;Id&gt; schema = divs, table = redlining     FALSE
+## 2    &lt;Id&gt; schema = divs, table = rails_bts     FALSE
+## 3 &lt;Id&gt; schema = divs, table = water_tigris     FALSE
+## 4         &lt;Id&gt; schema = divs, table = hwys     FALSE
+## 5       &lt;Id&gt; schema = divs, table = places     FALSE
+## 6  &lt;Id&gt; schema = divs, table = hwyPlan1947     FALSE</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="co"># this fcn just wraps DBI::dbListObjects w/ some parameters specified</span></span></code></pre></div>
+<p>Here we can see the tables in the “divs” schema. It’ll likely make sense to add more schema as we work to keep all the components of the project organized.</p>
+</div>
+<div id="working-with-hosted-data" class="section level3">
+<h3>Working with hosted data</h3>
+<p>You can start working with what’s there by using R, SQL, or a combination. I know very minimal SQL and it’s not necessary to to use these things. But learning enough to write a line here or there can be convenient in some cases.</p>
+<p>First let’s just pull in a whole table. This will use ‘dbplyr,’ a library that translates tidyverse R code into SQL. Our code will change slightly depending on whether or not we’re reading in spatial information .</p>
+<p>The ‘dbplyr’ vignette can be found here: <a href="https://dbplyr.tidyverse.org/articles/dbplyr.html" class="uri">https://dbplyr.tidyverse.org/articles/dbplyr.html</a></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="co"># First, let&#39;s read using dbplyr:</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="kw">suppressMessages</span>(<span class="kw">library</span>(dplyr))</span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="kw">suppressMessages</span>(<span class="kw">library</span>(dbplyr))</span>
+<span id="cb14-4"><a href="#cb14-4"></a>cts &lt;-<span class="st"> </span><span class="kw">tbl</span>(con, <span class="kw">in_schema</span>(<span class="st">&quot;attr&quot;</span>, <span class="st">&quot;cts&quot;</span>))</span>
+<span id="cb14-5"><a href="#cb14-5"></a><span class="kw">colnames</span>(cts)[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</span></code></pre></div>
+<pre><code>##  [1] &quot;state&quot;      &quot;county&quot;     &quot;tract&quot;      &quot;geoid&quot;      &quot;cz&quot;        
+##  [6] &quot;czname&quot;     &quot;cbsa_id&quot;    &quot;county_id&quot;  &quot;row_id&quot;     &quot;population&quot;</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="co"># Now we can see the data, but it&#39;s still a ~reference~ to the database table,</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="co"># not a df or tibble in our R environment:</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a><span class="kw">class</span>(cts)</span></code></pre></div>
+<pre><code>## [1] &quot;tbl_PqConnection&quot; &quot;tbl_dbi&quot;          &quot;tbl_sql&quot;          &quot;tbl_lazy&quot;        
+## [5] &quot;tbl&quot;</code></pre>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="co"># It&#39;s generally a good idea to pull things into local memory as soon as they&#39;re</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a><span class="co"># down to a manageable size. Database references will be harder to</span></span>
+<span id="cb18-3"><a href="#cb18-3"></a><span class="co"># work with. This is done as:</span></span>
+<span id="cb18-4"><a href="#cb18-4"></a>local.cts &lt;-<span class="st"> </span><span class="kw">collect</span>(cts)</span>
+<span id="cb18-5"><a href="#cb18-5"></a><span class="kw">class</span>(local.cts)</span></code></pre></div>
+<pre><code>## [1] &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</code></pre>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="co"># You can also use dplyr to generate sql queries:</span></span>
+<span id="cb20-2"><a href="#cb20-2"></a>czpop &lt;-<span class="st"> </span>cts <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(cz, czname) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">summarise</span>(<span class="st">&quot;commuting zone population&quot;</span> =<span class="st"> </span><span class="kw">sum</span>(population, <span class="dt">na.rm =</span> T))</span>
+<span id="cb20-3"><a href="#cb20-3"></a>czpop <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()</span></code></pre></div>
+<pre><code>## # Source:   lazy query [?? x 3]
+## # Database: postgres [km31@carto.princeton.edu:5432/shp]
+## # Groups:   cz
+##      cz czname         `commuting zone population`
+##   &lt;int&gt; &lt;chr&gt;                              &lt;int64&gt;
+## 1    NA &lt;NA&gt;                                782195
+## 2  7500 Deltona                             664653
+## 3 11101 Montgomery                          395483
+## 4 33400 Longview                            314342
+## 5 12902 Mount Sterling                       44396
+## 6 35300 Farmington                          194161</code></pre>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="co"># equivalent sql to above R code:</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a>czpop <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">show_query</span>()</span></code></pre></div>
+<pre><code>## &lt;SQL&gt;
+## SELECT &quot;cz&quot;, &quot;czname&quot;, SUM(&quot;population&quot;) AS &quot;commuting zone population&quot;
+## FROM attr.cts
+## GROUP BY &quot;cz&quot;, &quot;czname&quot;</code></pre>
+<p>One likely use case might be pulling from an extremely large table that won’t fit into local memory all at once. We can pull in subsamples for exploratory analysis or iterate through identifiers to process over the full dataset:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="co"># Pull in just census-tracts for Philadelphia</span></span>
+<span id="cb24-2"><a href="#cb24-2"></a>phl.cts &lt;-<span class="st"> </span>cts <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(czname <span class="op">==</span><span class="st"> &quot;Philadelphia&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">collect</span>()</span>
+<span id="cb24-3"><a href="#cb24-3"></a>phl.cts <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(geoid, cz, czname, population) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()</span></code></pre></div>
+<pre><code>## # A tibble: 6 x 4
+##   geoid             cz czname       population
+##   &lt;chr&gt;          &lt;int&gt; &lt;chr&gt;             &lt;int&gt;
+## 1 G3400010000100 19700 Philadelphia       2417
+## 2 G3400010000200 19700 Philadelphia       3202
+## 3 G3400010000300 19700 Philadelphia       4373
+## 4 G3400010000400 19700 Philadelphia       2606
+## 5 G3400010000500 19700 Philadelphia       3503
+## 6 G3400010001100 19700 Philadelphia       2027</code></pre>
+<p>This will likely more useful with, for example, the 380GB safegraph data!</p>
+</div>
+<div id="working-with-spatial-data" class="section level3">
+<h3>Working with spatial data</h3>
+<p>I’ve mostly been using this setup for spatial data so far. The ‘dblinkr’ library I referenced above has some helper functions for spatially subsetting from a database. dbplyr won’t be able to do spatial subsets and won’t handle geometries well, so we switch to the sf library or dblinkr helper functions for this.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="kw">library</span>(sf)</span></code></pre></div>
+<pre><code>## Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 6.3.1</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="kw">tbls.in.schema</span>(con, <span class="st">&quot;regions&quot;</span>)</span></code></pre></div>
+<pre><code>##                                     table is_prefix
+## 1  &lt;Id&gt; schema = regions, table = cts2010     FALSE
+## 2   &lt;Id&gt; schema = regions, table = states     FALSE
+## 3     &lt;Id&gt; schema = regions, table = cbsa     FALSE
+## 4 &lt;Id&gt; schema = regions, table = counties     FALSE
+## 5 &lt;Id&gt; schema = regions, table = czs_1990     FALSE</code></pre>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a><span class="co"># use sf library to load a subset. SQL is used for the &#39;query&#39; argument.</span></span>
+<span id="cb30-2"><a href="#cb30-2"></a>counties &lt;-<span class="st"> </span><span class="kw">st_read</span>(con, <span class="dt">query =</span> <span class="st">&quot;select * from regions.counties where statefp=&#39;42&#39;;&quot;</span>)</span>
+<span id="cb30-3"><a href="#cb30-3"></a></span>
+<span id="cb30-4"><a href="#cb30-4"></a>phl &lt;-<span class="st"> </span>counties <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">grepl</span>(<span class="st">&quot;Philadelphia&quot;</span>, name))</span>
+<span id="cb30-5"><a href="#cb30-5"></a><span class="co"># use this region to subset from other, more memory-intensive spatial datasets.</span></span>
+<span id="cb30-6"><a href="#cb30-6"></a><span class="co"># Below helper function gets all rows of a spatial table within the area bounded</span></span>
+<span id="cb30-7"><a href="#cb30-7"></a><span class="co"># by the supplied region.</span></span>
+<span id="cb30-8"><a href="#cb30-8"></a>phwys &lt;-<span class="st"> </span>dblinkr<span class="op">::</span><span class="kw">query.division</span>(con, <span class="dt">region =</span> phl, <span class="st">&quot;divs.hwys&quot;</span>)</span>
+<span id="cb30-9"><a href="#cb30-9"></a>prl &lt;-<span class="st"> </span>dblinkr<span class="op">::</span><span class="kw">query.division</span>(con, <span class="dt">region =</span> phl, <span class="st">&quot;divs.redlining&quot;</span>)</span>
+<span id="cb30-10"><a href="#cb30-10"></a><span class="co"># make a cool map?</span></span>
+<span id="cb30-11"><a href="#cb30-11"></a><span class="kw">library</span>(ggplot2)</span>
+<span id="cb30-12"><a href="#cb30-12"></a><span class="kw">ggplot</span>() <span class="op">+</span></span>
+<span id="cb30-13"><a href="#cb30-13"></a><span class="st">  </span><span class="kw">geom_sf</span>(<span class="dt">data =</span> prl, <span class="kw">aes</span>(<span class="dt">fill=</span> holc_grade), <span class="dt">color =</span> <span class="st">&quot;white&quot;</span>) <span class="op">+</span></span>
+<span id="cb30-14"><a href="#cb30-14"></a><span class="st">  </span><span class="kw">geom_sf</span>(<span class="dt">data =</span> <span class="kw">st_crop</span>(phwys, prl), <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>, <span class="dt">size =</span> <span class="dv">1</span>) <span class="op">+</span></span>
+<span id="cb30-15"><a href="#cb30-15"></a><span class="st">  </span><span class="kw">theme_void</span>() <span class="op">+</span></span>
+<span id="cb30-16"><a href="#cb30-16"></a><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;hwys and redlining in philly&quot;</span>)</span></code></pre></div>
+<pre><code>## although coordinates are longitude/latitude, st_intersection assumes that they are planar</code></pre>
+<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout all
+## geometries</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>(You can also supply SQL to subset a shapefile even if you’re reading just from a file, rather than from a database.)</p>
+</div>
+<div id="final-notes" class="section level3">
+<h3>Final Notes</h3>
+</div>
+<div id="working-outside-of-r" class="section level2">
+<h2>Working outside of R</h2>
+<p>As a final quick note, you can download <a href="https://www.pgadmin.org/">pgadmin</a> to have a GUI to check all of this. This can be really useful for checking that things are going as expected and to have more of a visual on the db. It was surprisingly painless for me to get this set up and find the princeton db from it.</p>
+</div>
+<div id="little-quirks-and-tips" class="section level2">
+<h2>Little quirks and tips</h2>
+<p>As I mentioned, I’m not an expert in this stuff either, although I have found it useful and workable. Here are a couple quirks and tips from working with SQL from R: - Try to avoid capitalizing schema or table names when you upload them to the database. It causes double quotes to be required, which are not otherwise required. It feels easier to keep everything lowercase. - Writing spatial data to the database using sf::st_write is straightforward, except the CRS doesn’t seem to transfer. My workaround has been to always set the CRS to 4326 before uploading so that they’re all standard. I’m not sure there is a better approach, but if you’re uploading spatial data, be aware of this.</p>
+</div>
+<div id="additional-resources" class="section level2">
+<h2>Additional resources</h2>
+<ol style="list-style-type: decimal">
+<li><a href="https://db.rstudio.com/dbi/">Intro to DBI</a> – underlying package for using databases from R</li>
+<li><a href="https://cran.r-project.org/web/packages/dbplyr/vignettes/dbplyr.html">dbplyr vignette</a></li>
+<li><a href="https://jayrobwilliams.com/posts/2020/09/spatial-sql">More on Spatial SQL from R</a></li>
+<li><a href="https://postgis.net/">PostGIS</a> &amp; <a href="https://www.postgresql.org/">PostgresSQL</a> – The actual setups for our database</li>
+</ol>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
