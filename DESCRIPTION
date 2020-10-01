@@ -7,7 +7,6 @@ Maintainer: KM <kira.mcd.99@gmail.com>
 Description: Convenience functions for connecting to postgis/postgres database and doing spatial queries. Includes a tutorial vignette on working with dbs from R.
 Imports: 
   DBI,
-  dbplyr,
   dplyr,
   ggplot2,
   knitr,

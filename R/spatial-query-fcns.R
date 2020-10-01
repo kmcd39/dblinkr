@@ -1,5 +1,17 @@
 # querying shapes ---------------------------------------------------------
 
+#' q_db2sf
+#'
+#' Quick database to sf. Conveninece fcn to read spatial info from db into an sf
+#' object in R.
+#' @param schema_table Schema and table in form "schema.table"
+q_db2sf <- function(connection, schema_table) {
+  require(sf)
+  st_read(con, query = 
+            paste0( "select * from "
+                   ,schema_table ))
+}
+
 
 #' query.division
 #'
@@ -50,9 +62,11 @@ persistent.query.division <- function(connection, region, div.name) {
 }
 
 
-#' query.by.geoid
-#' 
-#' Both slower and less convenient than above, so not included. 
+# query.by.geoid
+# 
+# Both slower and less convenient than above, so not included. 
+#importFrom dbplyr sql_render in_schema
+'
 query.by.geoid <- function(con, region.type, geoid, tbl_name = "geopaired_hwys") {
   require(sf)
   require(dplyr)
@@ -73,5 +87,6 @@ query.by.geoid <- function(con, region.type, geoid, tbl_name = "geopaired_hwys")
   
   return(out)
 }
+'
 # query.by.geoid(con, test.area$region.type, get_geoid(test.area$id))
 
