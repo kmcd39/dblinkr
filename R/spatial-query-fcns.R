@@ -5,6 +5,7 @@
 #' Quick database to sf. Conveninece fcn to read spatial info from db into an sf
 #' object in R.
 #' @param schema_table Schema and table in form "schema.table"
+#' @export
 q_db2sf <- function(connection, schema_table) {
   require(sf)
   st_read(con, query = 
