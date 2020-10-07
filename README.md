@@ -32,3 +32,7 @@ Take a look at the schemas and tables present:
 DBI::dbListObjects(con)
 dblinkr::tbls.in.schema(con, "divs")
 ```
+
+# Longer Tutorial #
+A longer tutorial on using dblinkr and working with databases from R generally is here:
+https://rpubs.com/kmc39/672009
