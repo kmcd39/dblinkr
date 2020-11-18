@@ -1,5 +1,5 @@
 
-# setup ---------------------------------------------------------------------
+# setup ws ---------------------------------------------------------------------
 library(sf)
 library(dplyr)
 library(dblinkr)
@@ -54,16 +54,21 @@ counties_added <- tribble(
   "46102", "27704"
 )
 # URL for commuting zone county partition using 1990 counties
-url_cz <- "https://www.ers.usda.gov/webdocs/DataFiles/48457/czlma903.xls?v=68.4"  ### older link from walkerke code: "https://www.ers.usda.gov/webdocs/DataFiles/Commuting_Zones_and_Labor_Market_Areas__17970/czlma903.xls"
-cz_loc <- ".tmp/czlma903.xls"
+url_cz <- "https://www.ers.usda.gov/webdocs/DataFiles/48457/czlma903.xls?v=68.4"
+### older link from walkerke code: "https://www.ers.usda.gov/webdocs/DataFiles/Commuting_Zones_and_Labor_Market_Areas__17970/czlma903.xls"
+cz_loc <- "~/R/dblinkr/.tmp/czlma903.csv" #.xls
 # Read commuting zone county partition, add place and state variables
+library(stringr)
 co2cz <- 
-  readxl::read_excel(cz_loc, sheet = "CZLMA903", na = ".") %>%
+  read.csv(cz_loc) %>%
+  tibble() %>%
   select(
     fips_county = contains("FIPS"),
     cz_1990 = CZ90,
-    place_state = contains("largest place")
+    place_state = contains("largest.place")
   ) %>% 
+  mutate_at(c(1,2),
+            ~stringr::str_pad(., 5, side= "left", "0")) %>%
   mutate(
     place =
       place_state %>% 
@@ -72,7 +77,7 @@ co2cz <-
   ) %>% 
   select(-place_state) %>%
   rename( cz_name = place)
-
+co2cz
 # Adjust county partition for counties added and deleted since 1990
 v <- 
   counties_added %>% 
@@ -82,7 +87,15 @@ co2cz <-
   filter(!(fips_county %in% counties_deleted))
 
 
+
 # end adaptation from walkerke code ---------------------------------------
+
+# write neat county-cz cwalk to db
+dbWriteTable(conn = con
+             ,name = Id(schema = "xwalks", table = "county2cz")
+             ,value = co2cz
+)
+
 
 # -------------------------------------------------------------------------
 

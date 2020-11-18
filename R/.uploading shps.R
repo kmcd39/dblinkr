@@ -1,12 +1,13 @@
 
-# 1947 hwy plan ---------------------------------------------------------------------
+
 library(sf)
 library(dplyr)
 library(dblinkr)
 library(purrr)
 
 shp.dir <- "~/R/shapefiles/"
-con <- princeton.db.connect() 
+con <- princeton.db.connect(usr="km31",pw="Sh@rkey20")
+# 1947 hwy plan ---------------------------------------------------------------------
 # this is the 1947 hwy plan digitized by philly federal reserve ppl, after I
 # made some manual edits using mapedit::editFeatures
 cleaned_plan <- st_read(paste0(shp.dir, "1947plan/most addl cleans/cleaner-hwy-plan.shp"))
@@ -225,9 +226,16 @@ st_write(obj = cbsa, dsn = con, Id(schema="regions", table="cbsa"))
 rm(list=ls())
 # CZs --------------------------------------------------------------------
 
-czs <- st_read(paste0(shp.dir,
-                      "1990 commuting zones/cz1990.shp"))
-
+czS <- st_read(paste0(shp.dir,
+                       "1990 commuting zones/cz1990.shp")) # realized this version was simplified polygons
+                      
+czs <- readRDS(paste0(shp.dir,
+                      "1990 commuting zones/cb_2015_us_cz_500k_sf.rds")) %>% ungroup()
+library(mapview)
+czs %>% filter(place == "Philadelphia") %>% mapview() +
+  mapview(st_boundary(filter(czS, cz == 19700 ))
+          , color="red") +
+  
 # checks
 pcz = divDat::geo.list$cz
 tmp1 = pcz %>% filter(grepl("New York", region.name)) %>% st_transform(4326)
@@ -247,7 +255,6 @@ st_write(obj = pcz, dsn = con, Id(schema="regions", table="czs1990"))
 
 
 # states ------------------------------------------------------------------
-
 states = tigris::states()
 states = select(states,
                 c( STATEFP 

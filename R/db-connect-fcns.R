@@ -6,42 +6,6 @@ library(dbplyr)
 
 # db connect fcns ---------------------------------------------------------
 
-#' aws.connect
-#'
-#' connects to my amazon web service (aws) database. 
-aws.connect <- function( usr, pw
-                        ,db = "geoseg_1"
-                        ,driver = c("Postgres", "RPostgreSQL")
-                        ,pool=FALSE, port = 5432) {
-  require(DBI)
-  require(RPostgreSQL)
-  driver = driver[1]
-  driver.index = c("Postgres" = RPostgres::Postgres(),
-                   "RPostgreSQL" = DBI::dbDriver("PostgreSQL"))
-  cat("connecting with",driver,"driver")
-  driver=driver.index[[driver]]
-  
-  #login info
-  
-  if(pool) {
-    con <- pool::dbPool(driver
-                        ,dbname = db
-                        ,host = "geoseg-instance-1.cyj8wtbh3rhs.us-east-2.rds.amazonaws.com"
-                        ,port =  port
-                        ,user = usr
-                        ,password = pw)
-  } else {
-    con <- DBI::dbConnect(driver
-                          ,dbname = db
-                          ,host = "geoseg-instance-1.cyj8wtbh3rhs.us-east-2.rds.amazonaws.com"
-                          ,port =  port
-                          ,user = usr
-                          ,password = pw) }
-  return(con)
-}
-
-
-
 
 #' princeton.db.connect
 #'
@@ -49,6 +13,7 @@ aws.connect <- function( usr, pw
 #' Supply a username and password; default options should be appropriate
 #' otherwise.
 #' @param db name of database to connect to.
+#' @param host db host.
 #' @param usr Username for connecting to the datbase.
 #' @param pw password.
 #' @param driver Driver to use. Parsed from text to RPostgres:Postgres() or
@@ -56,13 +21,15 @@ aws.connect <- function( usr, pw
 #'   convenient for me.
 #' @param pool Whether or not to open a connection as pool. Defaults to false.
 #' @export
-princeton.db.connect <- function(usr, pw
-                                 ,db = "shp"
-                                 ,driver = c("Postgres", "RPostgreSQL")
-                                 ,pool=FALSE, port = 5432) {
+db.connect <- function(usr, pw
+                       ,db = "shp"
+                       ,host = c("carto.princeton.edu", "geoseg-instance-1.cyj8wtbh3rhs.us-east-2.rds.amazonaws.com")
+                       ,driver = c("Postgres", "RPostgreSQL")
+                       ,pool=FALSE, port = 5432) {
   require(DBI)
   require(RPostgreSQL)
   driver = driver[1]
+  host = host[1]
   driver.index = c("Postgres" = RPostgres::Postgres(),
                    "RPostgreSQL" = DBI::dbDriver("PostgreSQL"))
   cat("connecting with",driver,"driver")
@@ -71,14 +38,14 @@ princeton.db.connect <- function(usr, pw
   if(pool) {
     con <- pool::dbPool(driver
                         ,dbname = db
-                        ,host = "carto.princeton.edu"
+                        ,host = host
                         ,port =  port
                         ,user = usr
                         ,password = pw)
   } else {
     con <- DBI::dbConnect(driver
                           ,dbname = db
-                          ,host = "carto.princeton.edu"
+                          ,host = host
                           ,port =  port
                           ,user = usr
                           ,password = pw) }
